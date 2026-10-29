@@ -213,18 +213,93 @@ client.on(Events.InteractionCreate, async i => {
       });
     }
 
-    if (name === 'status') {
-      return i.reply({
-        embeds: [
-          embed(
-            '🛡️ FFH4X $',
-            '🟢 Bot conectado\n⚙️ Comandos registrados\n' +
-            '🤖 Control de bots no autorizados\n' +
-            '📋 Registros en el canal configurado o en #logs.'
-          )
-        ]
-      });
-    }
+ 
+if (name === 'status') {
+  const guild = i.guild;
+
+  const modules = [
+    { name: 'Anti-Spam', active: s.antispam },
+    { name: 'Anti-Enlaces', active: s.antilinks },
+    { name: 'Anti-Raid', active: s.antiraid },
+    { name: 'Alertas Anti-Nuke', active: s.antinuke }
+  ];
+
+  const activeModules = modules.filter(m => m.active).length;
+
+  const uptime = Math.floor(client.uptime / 1000);
+  const days = Math.floor(uptime / 86400);
+  const hours = Math.floor((uptime % 86400) / 3600);
+  const minutes = Math.floor((uptime % 3600) / 60);
+
+  const logChannel = s.logs
+    ? guild.channels.cache.get(s.logs)
+    : guild.channels.cache.find(
+        c => c.name === 'logs' && c.isTextBased()
+      );
+
+  const panel = new EmbedBuilder()
+    .setColor(0xE60026)
+    .setTitle('📊 Status — FFH4X $ 🛡️')
+    .setDescription(
+      'Estado general y configuración de seguridad del servidor.'
+    )
+    .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
+    .addFields(
+      {
+        name: '🟢 Bot',
+        value: 'En línea',
+        inline: true
+      },
+      {
+        name: '📡 Latencia',
+        value: `${client.ws.ping} ms`,
+        inline: true
+      },
+      {
+        name: '👥 Miembros',
+        value: `${guild.memberCount}`,
+        inline: true
+      },
+      {
+        name: '🛡️ Protecciones',
+        value: `${activeModules}/${modules.length} módulos activados`,
+        inline: false
+      },
+      {
+        name: '⚔️ Estado de seguridad',
+        value: modules.map(m =>
+          `${m.active ? '🟢' : '🔴'} **${m.name}:** ${
+            m.active ? 'Activado' : 'Desactivado'
+          }`
+        ).join('\n'),
+        inline: false
+      },
+      {
+        name: '🔐 Bypass',
+        value:
+          `🤖 Bots autorizados: ${s.allowedBots.length}\n` +
+          `👤 Usuarios de confianza: ${s.trustedUsers.length}`,
+        inline: true
+      },
+      {
+        name: '📋 Logs',
+        value: logChannel ? `${logChannel}` : 'No configurado',
+        inline: true
+      },
+      {
+        name: '⏱️ Tiempo activo',
+        value: `${days}d ${hours}h ${minutes}m`,
+        inline: false
+      }
+    )
+    .setFooter({
+      text: 'FFH4X $ • Dev: @Muertoffx'
+    })
+    .setTimestamp();
+
+  return i.reply({ embeds: [panel] });
+}
+
 
     if (name === 'security') {
       return i.reply({
